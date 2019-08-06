@@ -1,0 +1,57 @@
+{
+  "name": "point-to-point-messaging",
+  "version": "0.0.1",
+  "main": "build/index.js",
+  "author": "Ben Burns <ben@whiteblock.io>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/encoding-down": "^5.0.0",
+    "@types/jest": "^24.0.15",
+    "@types/leveldown": "^4.0.0",
+    "@types/levelup": "^3.1.1",
+    "@types/node": "^12.6.8",
+    "@types/pify": "^3.0.2",
+    "@types/socket.io": "^2.1.2",
+    "@types/socket.io-client": "^1.4.32",
+    "@types/temp": "^0.8.34",
+    "@types/uuid": "^3.4.5",
+    "@types/winston": "^2.4.4",
+    "@types/yargs": "^13.0.2",
+    "eth-crypto": "^1.4.0",
+    "husky": "^3.0.1",
+    "jest": "^24.8.0",
+    "lint-staged": "^9.2.1",
+    "pify": "^4.0.1",
+    "temp": "^0.9.0",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "@types/express": "^4.17.0",
+    "encoding-down": "^6.1.0",
+    "express": "^4.17.1",
+    "level": "^5.0.1",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
+    "uuid": "^3.3.2",
+    "yargs": "^13.3.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "./src/**/*.ts": [
+      "tslint -c tslint.json --fix",
+      "git add"
+    ]
+  },
+  "scripts": {
+    "start": "node build/index.js",
+    "build": "tsc -b",
+    "prepare": "yarn build",
+    "test": "jest"
+  }
+}
