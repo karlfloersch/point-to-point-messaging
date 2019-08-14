@@ -49,6 +49,7 @@
   },
   "scripts": {
     "start": "node build/index.js",
+    "test-client-swarm": "node build/example-client-usage.js",
     "build": "tsc -b",
     "prepare": "yarn build",
     "test": "jest"
