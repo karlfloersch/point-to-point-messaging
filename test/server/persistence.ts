@@ -1,7 +1,6 @@
 import assert from "assert";
 import temp from "temp";
 import pify from "pify";
-import EthCrypto, { Encrypted } from "eth-crypto";
 
 import { Persistence } from "../../src/server/persistence";
 import { IMessage } from "../../src";
@@ -13,9 +12,12 @@ const mktmp = pify(temp.mkdir);
 
 // tslint:disable-next-line: interface-name
 interface Identity {
-  privateKey: string;
-  publicKey: string;
   address: string;
+}
+
+// tslint:disable-next-line: interface-name
+interface FakeEncryptedMessage {
+  plaintext: string;
 }
 
 describe("Persistence", () => {
@@ -23,34 +25,38 @@ describe("Persistence", () => {
     let persistence: Persistence;
     let tempPath: string;
     let recipient: Identity;
-    let encryptedMessage: Encrypted;
+    let fakeEncryptedMessage: FakeEncryptedMessage;
 
     beforeAll(async () => {
       tempPath = await mktmp("basic-functionality");
       persistence = new Persistence(tempPath);
-      recipient = EthCrypto.createIdentity();
-      encryptedMessage = await EthCrypto.encryptWithPublicKey(recipient.publicKey, "hello world");
+      recipient = {
+        address: "0x0000000000000000000000000000000000000001",
+      }
+      fakeEncryptedMessage = {
+        plaintext: "hello world",
+      };
     });
 
     test("should store message", async () => {
       await persistence.persistMessage({
         to: recipient.address,
-        message: encryptedMessage,
+        message: fakeEncryptedMessage,
       });
 
       // nothing to assert, passes if it doesn't throw
     });
 
     test("should retrieve stored message", async () => {
-      const messages: Array<IMessage<Encrypted>> = [];
+      const messages: Array<IMessage<FakeEncryptedMessage>> = [];
 
-      for await (const message of persistence.messages<Encrypted>(recipient.address)) {
+      for await (const message of persistence.messages<FakeEncryptedMessage>(recipient.address)) {
         messages.push(message);
       }
 
       assert.strictEqual(messages.length, 1, "Incorrect persisted message count!");
-      const decryptedMessage = await EthCrypto.decryptWithPrivateKey(recipient.privateKey, messages[0].message);
-      assert.strictEqual(decryptedMessage, "hello world");
+      const fakeDecryptedMessage = messages[0].message.plaintext;
+      assert.strictEqual(fakeDecryptedMessage, "hello world");
     });
   });
 
@@ -58,59 +64,63 @@ describe("Persistence", () => {
     let persistence: Persistence;
     let tempPath: string;
     let recipient: Identity;
-    let encryptedMessage: Encrypted;
+    let fakeEncryptedMessage: FakeEncryptedMessage;
 
     beforeAll(async () => {
       tempPath = await mktmp("unread-messages-functionality");
       persistence = new Persistence(tempPath);
-      recipient = EthCrypto.createIdentity();
-      encryptedMessage = await EthCrypto.encryptWithPublicKey(recipient.publicKey, "hello world");
+      recipient = {
+        address: "0x0000000000000000000000000000000000000001",
+      }
+      fakeEncryptedMessage = {
+        plaintext: "hello world",
+      };
 
       await persistence.persistMessage({
         to: recipient.address,
-        message: encryptedMessage,
+        message: fakeEncryptedMessage,
       });
     });
 
     test("should only retrieve stored message once", async () => {
-      const messages: Array<IMessage<Encrypted>> = [];
+      const messages: Array<IMessage<FakeEncryptedMessage>> = [];
 
-      for await (const message of persistence.messages<Encrypted>(recipient.address)) {
+      for await (const message of persistence.messages<FakeEncryptedMessage>(recipient.address)) {
         messages.push(message);
       }
 
       assert.strictEqual(messages.length, 1, "Incorrect persisted message count!");
 
       // calling `messages` a second time without persisting a new message shouldn't get us any more messages
-      for await (const message of persistence.messages<Encrypted>(recipient.address)) {
+      for await (const message of persistence.messages<FakeEncryptedMessage>(recipient.address)) {
         messages.push(message);
       }
 
       assert.strictEqual(messages.length, 1, "Incorrect persisted message count!");
-      const decryptedMessage = await EthCrypto.decryptWithPrivateKey(recipient.privateKey, messages[0].message);
-      assert.strictEqual(decryptedMessage, "hello world");
+      const fakeDecryptedMessage = await messages[0].message.plaintext;
+      assert.strictEqual(fakeDecryptedMessage, "hello world");
     });
 
     test("should be capable of retrieving messages that have been read if flag is given", async () => {
-      const messages: Array<IMessage<Encrypted>> = [];
+      const messages: Array<IMessage<FakeEncryptedMessage>> = [];
 
-      for await (const message of persistence.messages<Encrypted>(recipient.address, true)) {
+      for await (const message of persistence.messages<FakeEncryptedMessage>(recipient.address, true)) {
         messages.push(message);
       }
 
       assert.strictEqual(messages.length, 1, "Incorrect persisted message count!");
 
       // calling `messages` a second time without persisting a new message shouldn't get us any more messages
-      for await (const message of persistence.messages<Encrypted>(recipient.address, true)) {
+      for await (const message of persistence.messages<FakeEncryptedMessage>(recipient.address, true)) {
         messages.push(message);
       }
 
       assert.strictEqual(messages.length, 2, "Incorrect persisted message count!");
 
-      const decryptedMessage1 = await EthCrypto.decryptWithPrivateKey(recipient.privateKey, messages[0].message);
-      assert.strictEqual(decryptedMessage1, "hello world");
-      const decryptedMessage2 = await EthCrypto.decryptWithPrivateKey(recipient.privateKey, messages[1].message);
-      assert.strictEqual(decryptedMessage2, "hello world");
+      const fakeDecryptedMessage1 = messages[0].message.plaintext;
+      assert.strictEqual(fakeDecryptedMessage1, "hello world");
+      const fakeDecryptedMessage2 = messages[1].message.plaintext;
+      assert.strictEqual(fakeDecryptedMessage2, "hello world");
     });
   });
 });
